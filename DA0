@@ -1,0 +1,19 @@
+	LDI R21, 31	; R15 = 31
+	LDI R16, 59	; R16 = 59
+	LDI R17, 40	; R17 = 40
+	LDI R18, 48	; R18 = 48
+	LDI R19, 51	; R19 = 51
+	SBI DDRB, 2	; PB2 as an output
+	LDI R20, 0	;R20=0
+	STS PORTB, R20	;PORTB = R20
+	;OUT DDRB, R20	;DDRB = R20
+L1:
+	ADD R15, R16	; R15 = 31 + 59 = 90
+	ADD R15, R17	; R15 = 90 + 40 = 130
+	ADD R15, R18	; R15 = 130 +48 = 178
+	ADD R15, R19	; R15 = 178 + 51 = 229
+	BRCC L2		; If no carry occurs then go to L2
+  STS TCNT1H, R20	; else set R20 to high
+L2: 	
+	STS TCNT1L, R20	; If carry occurs, set R20 to low
+	
