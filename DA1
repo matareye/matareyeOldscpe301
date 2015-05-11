@@ -1,20 +1,51 @@
-#include <avr/io.h>
+.INCLUDE "M328PDEF.INC"
+.MACRO INITSTACK
+	LDI R16, HIGH(RAMEND)
+	OUT SPH, R16
+	LDI R16, LOw(RAMEND)
+	OUT SPL, R16
+.ENDMACRO
 
-DDRB |= 1<<5;
-PORTB &= ~(1<<5)
-while(1)
-{
-	OCR0=24;	//2.5/0.1=24 clock
-	TCCR0=0x09;
-	OCR1BH = 0;
-	OCR1BL=5;
-	TCCR1B=5;
-	
-	while((TIFR1&(1<<OCF1A))==0);
-	OCR1BH = 0;
-	OCR1BL=0;
-	TCCR1B=0;		//STOP TIMER0
-	
-	TIFR1 =0x02;
-	PORTB.5= ~PORTB.5
-}
+INITSTACK
+	LDI R16, 0x30		;R16=0x30
+
+	LDI R21, 0x19	;R20 = 25 decimal
+	LDI R17, 0		;R17=0
+	//LDI R18, 0	;R18=0
+	LDI R19, 0		;R19=0
+	LDI R20, 0		;R20=0
+	LDI R21, 0		;R21=0
+
+	MOV R14, R16	;R14=R16
+	ADD R14, R17	;R14=R14+R16
+	LDI R18, 0x02	;R18=2
+	//DIV R14, R15
+	swap R19
+	cbr R19, 0x02	;R19=R19/R18
+L1:
+	INC R19			;R19++
+	ADD R19, R19	;Sum=R19+R19
+	BRCC L2		; If no carry occurs go to L2
+	;STS R17, R19	;Output R19
+	RJMP DIV		;jump to divisble loop
+
+L2:	RJMP L1		; jump to L1
+
+DIV:
+	//DIV R14, 7
+	swap R19
+	cbr R19, 0x07		;R19=R19/7
+	//CMP REM, 0
+	BRCC EXIT			
+	ADD R20, R19
+	//DIV R14, 3
+	swap R19
+	cbr R19, 0x03		;R19=R19/3
+	//CMP REM, 0
+	BRCC EXIT
+	ADD R23, R19
+EXIT:
+
+
+
+RET
