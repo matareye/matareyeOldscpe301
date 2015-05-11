@@ -1,0 +1,23 @@
+#include <avr/io.h>
+int main()
+{
+DDRB |= 1<<5;		// set PORTB5 as output
+PORTB &= ~(1<<5);
+while(1)
+{
+	OCR0A=24;	//2.5/0.1=24 clock
+	TCCR0A=0x09;	// set TCCR0A to 9
+	OCR1BH = 0;		// Set low to 0
+	OCR1BL=5;		// set high to 5
+	TCCR1B=5;		// set TCCR1B to 5
+	
+	while((TIFR1&(1<<OCF1A))==0);
+	OCR1BH = 0;		// set high to 0
+	OCR1BL=0;		// set low to 0
+	TCCR1B=0;		//STOP TIMER0
+	
+	TIFR1 =0x02;		//set TIFR1 to 2
+	//PORTB.5= ~PORTB.5
+}
+return 0;
+}
