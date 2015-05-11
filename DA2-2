@@ -1,19 +1,21 @@
 #include <avr/io.h>
+
 #include "avr/interrupt.h"
 
 int main()
 {
-	DDRB=1<<0		//PB0=input
-	DDRB=1<<4		//PORTB.4=OUTPUT
-	DDRC=255		//portc=output
-	TCCR0=7	
-	GICR=(1<<INT0)		//ENABLE EXTERNAL INTERRUPT TO 0
+	DDRB=1<<0;	//PB0=input
+	DDRB=1<<4;		//PORTB.4=OUTPUT
+	DDRC=255;		//portc=output
+	TCCR0A=7;
+	EIMSK=(1<<INT0);		//ENABLE EXTERNAL INTERRUPT TO 0
 	sei();			// enable intterupt
 	
 	while(1);
+	return 0;
 }
 
 ISR(INT0_vect)		//ISR for external interrupt 0
 {
- PORTB  ^=(1<<4) 	//toggle PB4
+	PORTB  ^=(1<<4); 	//toggle PB4
 }
