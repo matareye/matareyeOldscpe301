@@ -1,0 +1,99 @@
+/*
+ 
+*/
+#define P_GAIN 0.8
+#define I_GAIN 0.005
+#define D_GAIN 0.01                     
+ 
+#define F_CPU 1000000
+#include <avr/io.h>
+
+#include <util/delay.h>
+#include <avr/interrupt.h>
+ 
+int set_rpm = 0,previous_error = 0;
+int error, feedback_rpm, output;
+int D_error = 0, I_error = 0;
+ 
+short c = 0;
+unsigned int pulses;
+ 
+//********************************//
+void init_interrupts(){
+ // Rising Edge 
+ MCUCR |=  (1 << ISC00)|(1 << ISC01);    
+ // INT0 Enabled        
+ EIMSK |= (1 << INT0);                            
+ sei();
+}
+ 
+void init_io(){
+ // Fast PWM mode - 16bit , Fixed frequency , Non- Inverting mode , TOP = ICR1 = 259
+ // Frequency = F_CPU/(N*(1+TOP) = 60Hz , N = 64
+ // Duty cycle set by OCR1A and OCR1B
+ TCCR1A = (1 << COM1A1) | (1 << WGM11) ;
+ TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS10) | (1 << CS11);                       
+ ICR1 = 259;
+ TCNT1L = 0;
+ TCNT1H = 0;
+ OCR1A = 0;
+ 
+// Timer2 CTC mode Frequency = F_CPU/(2*N*(1+OCR2)) = 2
+// Set to interrupt after 500ms
+ TCNT2 = 0x00;
+ OCR0A = 243;
+ // Prescalar 1024
+ TCCR1A |= (1 << CS20) | (1 << CS21) | (1 << CS22) ;  
+ TCCR1A |= (1 << WGM21);                          
+ TIMSK0 |= (1 << OCIE2A);                                                              
+}
+ 
+ISR(TIMER2_COMP_vect){
+ TCNT2=0;
+ c++;
+ if(2 == c){
+  feedback_rpm = pulses*5;
+  pulses = 0;
+  c=0;
+ }
+}
+ 
+ISR (SIG_INTERRUPT0){
+ pulses++;
+}
+ 
+int main(){
+ DDRD = 0xf0; 
+ DDRC = 0xff; 
+ set_rpm = 100;
+ 
+ init_interrupts();
+// init_lcd();
+ init_io();
+ 
+ previous_error = set_rpm - feedback_rpm;
+ 
+//Start infinite loop
+while(1){
+  error = set_rpm - feedback_rpm;
+  I_error += (error);
+  D_error = (error - previous_error);
+ 
+  output = (P_GAIN * error) + (I_GAIN * I_error) + (D_GAIN * D_error);
+ 
+  previous_error = error;
+ 
+  	if(OCR1A + output > 259){
+    OCR1A= 259;
+    }
+    else if(OCR1A + output < 0){
+    OCR1A= 0;
+    }
+    else{ 
+    OCR1A += output;
+    }
+ } //End of while
+ return 0;
+} //End of main
+
+//This code was taken from http://thetechnicalbrain.com/electronics/elec_pid.php
