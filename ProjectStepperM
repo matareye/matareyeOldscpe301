@@ -33,3 +33,5 @@ _delay_ms(100);
 }// opposite direction
 return 0;
 }
+
+//This code was taken from https://faculty.unlv.edu/eelabs/docs/labs/cpe301L/cpe301L_08_experiment_8.pdf
